@@ -214,5 +214,157 @@ FROM countries_plus AS c
     ON c.code = p.country_code
 ORDER BY geosize_group;
 
--- CHAPTER 2 --
--- LEFT AND RIGHT JOINS --
+-- CHAPTER 2 -----------------------------------------------------------------------
+-- LEFT AND RIGHT JOINS / OUTER JOINS AND FULL JOINS --
+
+--Left join keeps all data on left table and drops non-matching data from right table
+--Right table does reverse, less common
+
+SELECT c1.name AS city, code, c2.name AS country,
+       region, city_proper_pop
+FROM cities AS c1
+  -- Join right table (with alias)
+  LEFT JOIN countries AS c2
+    -- Match on country code
+    ON c1.country_code = c2.code
+-- Order by descending country code
+ORDER BY code DESC;
+--output gives null values from left table
+
+--Modify your code to calculate the average GDP per capita AS avg_gdp for each region in 2010.
+-- Select fields
+SELECT region, AVG(gdp_percapita) AS avg_gdp
+-- From countries (alias as c)
+FROM countries as c
+  -- Left join with economies (alias as e)
+  LEFT JOIN economies as e
+    -- Match on code fields
+    ON c.code = e.code
+-- Focus on 2010
+WHERE year = 2010
+-- Group by region
+GROUP BY region;
+
+--Arrange this data on average GDP per capita for each region in 2010 from highest to lowest average GDP per capita.
+-- Select fields
+SELECT region, AVG(gdp_percapita) AS avg_gdp
+-- From countries (alias as c)
+FROM countries AS c 
+  -- Left join with economies (alias as e)
+  LEFT JOIN economies AS e
+    -- Match on code fields
+    ON c.code = e.code
+-- Focus on 2010
+WHERE year = 2010
+-- Group by region
+GROUP BY region
+-- Order by descending avg_gdp
+ORDER BY avg_gdp DESC;
+
+--RIGHT JOIN
+-- convert this code to use RIGHT JOINs instead of LEFT JOINs
+/*
+SELECT cities.name AS city, urbanarea_pop, countries.name AS country,
+       indep_year, languages.name AS language, percent
+FROM cities
+  LEFT JOIN countries
+    ON cities.country_code = countries.code
+  LEFT JOIN languages
+    ON countries.code = languages.code
+ORDER BY city, language;
+*/
+
+SELECT cities.name AS city, urbanarea_pop, countries.name AS country,
+       indep_year, languages.name AS language, percent
+FROM languages
+  RIGHT JOIN countries
+    ON countries.code = languages.code
+  RIGHT JOIN cities
+    ON cities.country_code = countries.code
+ORDER BY city, language;
+
+--FULL JOINS-----------------------------------------------------------------
+--includes all data from both tables
+
+-- The FULL JOIN query returned 17 rows, the OUTER JOIN returned 4 rows, and the INNER JOIN only returned 3 rows.
+
+--make sure to compare the number of records the different types of joins return and try to verify whether the results make sense.
+
+SELECT countries.name, code, languages.name AS language
+-- From languages
+FROM languages
+  -- Join to countries
+  FULL JOIN countries
+    -- Match on code
+    USING (code)
+-- Where countries.name starts with V or is null
+WHERE countries.name LIKE 'V%' OR countries.name IS NULL
+-- Order by ascending countries.name
+ORDER BY countries.name;
+
+--Complete a full join with countries on the left and languages on the right.
+--Next, full join this result with currencies on the right.
+--Use LIKE to choose the Melanesia and Micronesia regions (Hint: 'M%esia').
+--Select the fields corresponding to the country name AS country, region, language name AS --language, and basic and fractional units of currency.
+-- Select fields (with aliases)
+SELECT c1.name AS country, region, l.name AS language,
+       basic_unit, frac_unit
+-- From countries (alias as c1)
+FROM countries as c1
+  -- Join with languages (alias as l)
+  FULL JOIN languages as l
+    -- Match on code
+    USING (code)
+  -- Join with currencies (alias as c2)
+  FULL JOIN currencies AS c2
+    -- Match on code
+    USING (code)
+-- Where region like Melanesia and Micronesia
+WHERE region LIKE 'M%esia';
+
+
+--CROSS JOIN-----------------------------------------------
+--create all possible combinations of two tables
+--table 1 (3 values), table 2 (3 values)
+--cross join table has 9 values
+
+--Create a CROSS JOIN with cities AS c on the left and languages AS l on the right.
+--Make use of LIKE and Hyder% to choose Hyderabad in both countries.
+--Select only the city name AS city and language name AS language.
+-- Select fields
+SELECT c.name AS city, l.name AS language
+-- From cities (alias as c)
+FROM cities AS c        
+  -- Join to languages (alias as l)
+  CROSS JOIN languages AS l
+-- Where c.name like Hyderabad
+WHERE c.name LIKE 'Hyder%';
+--returns 1910 rows
+
+-- Select fields
+SELECT c.name as city, l.name as language
+-- From cities (alias as c)
+FROM cities as c      
+  -- Join to languages (alias as l)
+  INNER JOIN languages AS l
+    -- Match on country code
+    ON c.country_code = l.code
+-- Where c.name like Hyderabad
+WHERE c.name LIKE 'Hyder%';
+--returns 25 rows
+
+--In terms of life expectancy for 2010, determine the names of the lowest five countries and their regions.
+-- Select fields
+SELECT c.name AS country, region, life_expectancy AS life_exp
+-- From countries (alias as c)
+FROM countries as c
+  -- Join to populations (alias as p)
+  LEFT JOIN populations as p
+    -- Match on country code
+    ON c.code = p.country_code
+-- Focus on 2010
+WHERE year = 2010
+-- Order by life_exp
+ORDER BY life_exp
+-- Limit to 5 records
+LIMIT 5;
