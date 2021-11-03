@@ -18,7 +18,6 @@ FROM people;
 --select all columns
 SELECT *
 FROM people;
-
 --set a specific number of results
 SELECT *
 FROM people
